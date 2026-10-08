@@ -1,27 +1,16 @@
-import { Bell, Settings } from 'lucide-react'
-
 export default function Header() {
   return (
-    <header className="flex h-20 shrink-0 items-center justify-between border-b border-slate-800 bg-slate-900 px-6">
-      
+    <header className="flex h-14 items-center justify-between rounded-2xl bg-white px-5 shadow-sm">
       <div>
-        <h2 className="text-lg font-semibold">
-          Flood Monitoring Dashboard
-        </h2>
-
-        <p className="text-sm text-slate-400">
-          Real-time flood risk monitoring
-        </p>
+        <h1 className="text-sm font-semibold text-gray-900">
+          Flood Prediction
+        </h1>
       </div>
 
-      <div className="flex items-center gap-2">
-        <button className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white">
-          <Bell size={20} />
-        </button>
-
-        <button className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white">
-          <Settings size={20} />
-        </button>
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-xs font-semibold text-white">
+          U
+        </div>
       </div>
     </header>
   )

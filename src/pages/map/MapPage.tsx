@@ -1,7 +1,7 @@
 export default function MapPage() {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold">
+    <div className="flex h-full items-center justify-center rounded-2xl border border-gray-200 bg-white">
+      <h1 className="text-xl font-semibold text-gray-900">
         Flood Map
       </h1>
     </div>

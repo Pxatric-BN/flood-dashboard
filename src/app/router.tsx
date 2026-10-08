@@ -1,35 +1,25 @@
 import { createBrowserRouter } from 'react-router-dom'
 
-import DashboardPage from '../pages/Dashboard/DashboardPage'
-import MapPage from '../pages/map/MapPage'
-import PredictionPage from '../pages/Prediction/PredictionPage'
-import RoutesPage from '../pages/Routes/RoutesPage'
-import AnalyticsPage from '../pages/Analytics/AnalyticsPage'
-import DashboardLayout from '../layout/DashboardLayout'
+import AppLayout from '@/layout/AppLayout'
+
+import DashboardPage from '@/pages/Dashboard/DashboardPage'
+import MapPage from '@/pages/map/MapPage'
+import AnalyticsPage from '@/pages/Analytics/AnalyticsPage'
 
 export const router = createBrowserRouter([
   {
-    path: '/',
-    element: <DashboardLayout />,
+    element: <AppLayout />,
     children: [
       {
-        index: true,
+        path: '/',
         element: <DashboardPage />,
       },
       {
-        path: 'map',
+        path: '/map',
         element: <MapPage />,
       },
       {
-        path: 'prediction',
-        element: <PredictionPage />,
-      },
-      {
-        path: 'routes',
-        element: <RoutesPage />,
-      },
-      {
-        path: 'analytics',
+        path: '/analytics',
         element: <AnalyticsPage />,
       },
     ],
