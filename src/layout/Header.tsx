@@ -7,11 +7,6 @@ export default function Header() {
         </h1>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-xs font-semibold text-white">
-          U
-        </div>
-      </div>
     </header>
   )
 }
