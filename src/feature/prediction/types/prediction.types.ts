@@ -2,13 +2,12 @@
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 
 
-export interface Flood30DaysParams {
+export interface FloodQueryParams {
   limit?: number
   offset?: number
   pv_idn?: string
   ap_idn?: string
   tb_idn?: string
-
   bbox?: [number, number, number, number]
 }
 
@@ -42,3 +41,5 @@ export type FloodFeatureCollection = FeatureCollection<
   numberReturned?: number
   timeStamp?: string
 }
+
+export type FloodPeriod = '1day' | '3days' | '7days' | '30days'
