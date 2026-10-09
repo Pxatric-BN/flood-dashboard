@@ -1,61 +1,169 @@
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useMap } from 'react-leaflet'
 
-import { getFlood30Days } from '@/feature/prediction/services/predictionService'
+import {
+  getFloodData,
+} from '@/feature/prediction/services/predictionService'
+
 import type {
-  Flood30DaysParams,
+  FloodFeature,
   FloodFeatureCollection,
+  FloodPeriod,
 } from '@/feature/prediction/types/prediction.types'
 
-const DEFAULT_PARAMS: Flood30DaysParams = {
-  limit: 100,
-  offset: 0,
+export interface PredictionStatus {
+  loading: boolean
+  error: string | null
+  returned: number
+  matched: number | null
+  incomplete: boolean
 }
 
-export function usePrediction(enabled = true) {
+const PAGE_SIZE = 100
+const MAX_PAGES = 5
+
+const INITIAL_STATUS: PredictionStatus = {
+  loading: false,
+  error: null,
+  returned: 0,
+  matched: null,
+  incomplete: false,
+}
+
+export function usePredictionViewport(
+  period: FloodPeriod,
+  onStatusChange: (status: PredictionStatus) => void,
+) {
+  const map = useMap()
+
   const [data, setData] = useState<FloodFeatureCollection | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [viewportKey, setViewportKey] = useState('')
 
-  const loadPrediction = useCallback(
-    async (signal?: AbortSignal) => {
-      setLoading(true)
-      setError(null)
+  const controllerRef = useRef<AbortController | null>(null)
+  const lastBoundsRef = useRef('')
 
-      try {
-        const result = await getFlood30Days(
-          DEFAULT_PARAMS,
-          signal,
-        )
-        setData(result)
-      } catch (err) {
-        if (signal?.aborted) return
+  const loadViewport = useCallback(async (force = false) => {
+    const bounds = map.getBounds()
 
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Unable to load flood data',
-        )
-      } finally {
-        if (!signal?.aborted) setLoading(false)
-      }
-    },
-    [],
-  )
+    const bbox = [
+      bounds.getWest(),
+      bounds.getSouth(),
+      bounds.getEast(),
+      bounds.getNorth(),
+    ].map((value) => Number(value.toFixed(5))) as [
+      number,
+      number,
+      number,
+      number,
+    ]
 
-  useEffect(() => {
-    if (!enabled) return
+    const key = bbox.join(',')
+
+    if (!force && key === lastBoundsRef.current) return
+    lastBoundsRef.current = key
+
+    controllerRef.current?.abort()
 
     const controller = new AbortController()
-    void loadPrediction(controller.signal)
+    controllerRef.current = controller
 
-    return () => controller.abort()
-  }, [enabled, loadPrediction])
+    setData(null)
+    setViewportKey(key)
 
-  return {
-    data,
-    loading,
-    error,
-    reload: () => void loadPrediction(),
-  }
+    onStatusChange({
+      ...INITIAL_STATUS,
+      loading: true,
+    })
+
+    const features: FloodFeature[] = []
+    let firstPage: FloodFeatureCollection | null = null
+    let matched: number | null = null
+
+    try {
+      for (let page = 0; page < MAX_PAGES; page += 1) {
+        const result = await getFloodData(
+          period,
+          {
+            bbox,
+            limit: PAGE_SIZE,
+            offset: page * PAGE_SIZE,
+          },
+          controller.signal,
+        )
+
+        if (controller.signal.aborted) return
+
+        if (!firstPage) {
+          firstPage = result
+          matched = result.numberMatched ?? null
+        }
+
+        features.push(...result.features)
+
+        setData({
+          ...firstPage,
+          features: [...features],
+          numberReturned: features.length,
+        })
+
+        onStatusChange({
+          loading: true,
+          error: null,
+          returned: features.length,
+          matched,
+          incomplete: false,
+        })
+
+        if (
+          result.features.length < PAGE_SIZE ||
+          (matched !== null && features.length >= matched)
+        ) {
+          break
+        }
+      }
+
+      if (controller.signal.aborted) return
+
+      onStatusChange({
+        loading: false,
+        error: null,
+        returned: features.length,
+        matched,
+        incomplete:
+          matched !== null && features.length < matched,
+      })
+    } catch (error) {
+      if (controller.signal.aborted) return
+
+      onStatusChange({
+        loading: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to load GISTDA flood data',
+        returned: features.length,
+        matched,
+        incomplete: false,
+      })
+    }
+  }, [map, period, onStatusChange])
+
+  useEffect(() => {
+    lastBoundsRef.current = ''
+    void loadViewport(true)
+
+    const handleMoveEnd = () => {
+      void loadViewport()
+    }
+
+    map.on('moveend', handleMoveEnd)
+
+    return () => {
+      map.off('moveend', handleMoveEnd)
+      controllerRef.current?.abort()
+    }
+  }, [map, loadViewport])
+
+  return { data, viewportKey }
 }
