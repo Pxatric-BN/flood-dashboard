@@ -24,6 +24,7 @@ export default function MapPage() {
       </div>
 
       <div className="min-h-0 flex-1">
+
         <FloodMap layers={layers} />
       </div>
     </div>
