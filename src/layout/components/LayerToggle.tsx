@@ -1,5 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 
+import { Switch } from '@/components/ui/switch'
+
 interface LayerToggleProps {
   label: string
   icon: LucideIcon
@@ -14,11 +16,7 @@ export default function LayerToggle({
   onChange,
 }: LayerToggleProps) {
   return (
-    <button
-      type="button"
-      onClick={onChange}
-      className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-gray-100"
-    >
+    <div className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 transition-colors hover:bg-gray-100">
       <div className="flex items-center gap-3">
         <Icon
           size={17}
@@ -29,28 +27,20 @@ export default function LayerToggle({
         <span
           className={
             checked
-              ? 'font-medium text-gray-900'
-              : 'text-gray-600'
+              ? 'text-sm font-medium text-gray-900'
+              : 'text-sm text-gray-600'
           }
         >
           {label}
         </span>
       </div>
 
-      <div
-        className={[
-          'relative h-5 w-9 rounded-full transition-colors',
-          checked ? 'bg-black' : 'bg-gray-200',
-        ].join(' ')}
-      >
-        <span
-          className={[
-            'absolute top-0.5 h-4 w-4 rounded-full bg-white',
-            'transition-transform duration-200',
-            checked ? 'translate-x-4' : 'translate-x-0.5',
-          ].join(' ')}
-        />
-      </div>
-    </button>
+      <Switch
+        checked={checked}
+        onCheckedChange={onChange}
+        aria-label={label}
+        className="data-[state=checked]:bg-black"
+      />
+    </div>
   )
 }
